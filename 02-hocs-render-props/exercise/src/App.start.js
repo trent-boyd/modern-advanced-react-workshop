@@ -7,21 +7,31 @@ const media = createMediaListener({
   tiny: "(max-width: 600px)"
 });
 
-class App extends React.Component {
-  state = {
-    media: media.getState()
+const withMedia = Component => {
+  return class extends React.Component {
+    static displayName = `${Component.name}WithMedia`;
+
+    state = {
+      media: media.getState()
+    };
+
+    componentDidMount() {
+      media.listen(media => this.setState({ media }));
+    }
+
+    componentWillUnmount() {
+      media.dispose();
+    }
+
+    render() {
+      return <Component media={this.state.media} />;
+    }
   };
+};
 
-  componentDidMount() {
-    media.listen(media => this.setState({ media }));
-  }
-
-  componentWillUnmount() {
-    media.dispose();
-  }
-
+class App extends React.Component {
   render() {
-    const { media } = this.state;
+    const { media } = this.props;
 
     return (
       <div>
@@ -37,4 +47,4 @@ class App extends React.Component {
   }
 }
 
-export default App;
+export default withMedia(App);
