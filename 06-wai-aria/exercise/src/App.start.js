@@ -24,6 +24,32 @@ import FaPause from "react-icons/lib/fa/pause";
 import FaForward from "react-icons/lib/fa/forward";
 import FaBackward from "react-icons/lib/fa/backward";
 
+function findNextValue(children, currentValue) {
+  return React.Children.toArray(children).reduce(
+    (nextValue, child, index, array) => {
+      if (child.props.value === currentValue) {
+        let nextIndex = index === array.length - 1 ? 0 : index + 1;
+        return array[nextIndex].props.value;
+      }
+      return nextValue;
+    },
+    null
+  );
+}
+
+function findPrevValue(children, currentValue) {
+  return React.Children.toArray(children).reduce(
+    (nextValue, child, index, array) => {
+      if (child.props.value === currentValue) {
+        let nextIndex = index === 0 ? array.length - 1 : index - 1;
+        return array[nextIndex].props.value;
+      }
+      return nextValue;
+    },
+    null
+  );
+}
+
 class RadioGroup extends Component {
   state = {
     value: this.props.defaultValue
@@ -37,7 +63,21 @@ class RadioGroup extends Component {
       });
     });
     return (
-      <fieldset className="radio-group">
+      <fieldset
+        className="radio-group"
+        role="radiogroup"
+        onKeyDown={event => {
+          if (event.key === "ArrowLeft") {
+            this.setState({
+              value: findPrevValue(children, this.state.value)
+            });
+          } else if (event.key === "ArrowRight") {
+            this.setState({
+              value: findNextValue(children, this.state.value)
+            });
+          }
+        }}
+      >
         <legend>{this.props.legend}</legend>
         {children}
       </fieldset>
@@ -46,13 +86,28 @@ class RadioGroup extends Component {
 }
 
 class RadioButton extends Component {
+  node = React.createRef();
+
+  componentDidUpdate(prevProps) {
+    if (!prevProps.isActive && this.props.isActive) {
+      this.node.current.focus();
+    }
+  }
+
   render() {
     const { isActive, onSelect } = this.props;
     const className = "radio-button " + (isActive ? "active" : "");
     return (
-      <span className={className} onClick={onSelect}>
+      <button
+        role="radio"
+        aria-checked={isActive}
+        ref={this.node}
+        tabIndex={isActive ? 0 : -1}
+        className={className}
+        onClick={onSelect}
+      >
         {this.props.children}
-      </span>
+      </button>
     );
   }
 }
@@ -63,16 +118,16 @@ class App extends Component {
       <div>
         <RadioGroup defaultValue="pause" legend="Radio Group">
           <RadioButton value="back">
-            <FaBackward />
+            <FaBackward aria-label="backward" />
           </RadioButton>
           <RadioButton value="play">
-            <FaPlay />
+            <FaPlay aria-label="play" />
           </RadioButton>
           <RadioButton value="pause">
-            <FaPause />
+            <FaPause aria-label="pause" />
           </RadioButton>
           <RadioButton value="forward">
-            <FaForward />
+            <FaForward aria-label="forward" />
           </RadioButton>
         </RadioGroup>
       </div>
