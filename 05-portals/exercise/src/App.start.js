@@ -24,8 +24,18 @@ import { createPortal } from "react-dom";
 import Rect from "@reach/rect";
 
 class Portal extends React.Component {
+  node = document.createElement("portal");
+
+  componentDidMount() {
+    document.body.appendChild(this.node);
+  }
+
+  componentWillUnmount() {
+    document.body.removeChild(this.node);
+  }
+
   render() {
-    return this.props.children;
+    return createPortal(this.props.children, this.node);
   }
 }
 
@@ -39,6 +49,10 @@ class Select extends React.Component {
     this.setState({
       isOpen: !this.state.isOpen
     });
+  };
+
+  setRef = el => {
+    this.select = el;
   };
 
   render() {
@@ -58,16 +72,29 @@ class Select extends React.Component {
     });
 
     return (
-      <div onClick={this.handleToggle} className="select">
-        <button className="label">
-          {label} <span className="arrow">▾</span>
-        </button>
-        {isOpen && (
-          <Portal>
-            <ul className="options">{children}</ul>
-          </Portal>
+      <Rect>
+        {({ rect, ref }) => (
+          <div onClick={this.handleToggle} className="select">
+            <button ref={ref} className="label">
+              {label} <span className="arrow">▾</span>
+            </button>
+            {isOpen && (
+              <Portal>
+                <ul
+                  className="options"
+                  style={{
+                    position: "absolute",
+                    top: rect.bottom,
+                    left: rect.left
+                  }}
+                >
+                  {children}
+                </ul>
+              </Portal>
+            )}
+          </div>
         )}
-      </div>
+      </Rect>
     );
   }
 }
