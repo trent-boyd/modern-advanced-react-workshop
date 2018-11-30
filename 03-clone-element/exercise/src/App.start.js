@@ -5,11 +5,24 @@ import FaForward from "react-icons/lib/fa/forward";
 import FaBackward from "react-icons/lib/fa/backward";
 
 class RadioGroup extends Component {
+  state = {
+    selectedIndex: undefined
+  };
+
+  onButtonClick(index) {
+    this.setState({ selectedIndex: index });
+  }
+
   render() {
     return (
       <fieldset className="radio-group">
         <legend>{this.props.legend}</legend>
-        {this.props.children}
+        {React.Children.map(this.props.children, (child, index) => {
+          return React.cloneElement(child, {
+            selected: index === this.state.selectedIndex,
+            onClick: () => this.onButtonClick(index)
+          });
+        })}
       </fieldset>
     );
   }
@@ -17,9 +30,12 @@ class RadioGroup extends Component {
 
 class RadioButton extends Component {
   render() {
-    const isActive = false; // <-- should come from somewhere
-    const className = "radio-button " + (isActive ? "active" : "");
-    return <button className={className}>{this.props.children}</button>;
+    const className = "radio-button " + (this.props.selected ? "active" : "");
+    return (
+      <button className={className} onClick={this.props.onClick}>
+        {this.props.children}
+      </button>
+    );
   }
 }
 
